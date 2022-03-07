@@ -1,0 +1,71 @@
+Parameters:
+  WindowWebServer: 
+    Description: Window weebserver EC2 instancce
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /dev/ec2/Instancetype
+
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-windows-latest/EC2LaunchV2-Windows_Server-2016-English-Full-Base
+
+  InstanceType:
+    Description: Window Server EC2
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /dev/ec2/Instancetype
+
+  MyVPC:
+    Description: VPC to operate in
+    Type: AWS::EC2::VPC::Id
+
+  MySubnetIDs:
+    Description: Subnet IDs that is a List of Subnet Id
+    Type: AWS::EC2::Subnet::Id
+  
+  PublicSubnet1:
+    Type: String
+
+  SecurityGroup:
+    Description: allowed security group
+    Type: AWS::EC2::SecurityGroup::GroupName
+    ConstraintDescription: must be an existing SG
+  
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances. Linked to AWS Parameter
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+Resources:
+  MyEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: !Ref InstanceType 
+      KeyName: !Ref KeyName
+      ImageId: !Ref ImageId
+      SubnetId: !Ref MySubnetIDs
+      SecurityGroupIds:
+        - !Ref MySecurityGroup 
+      Tags:
+        - Key: Name
+          Value: myInstance
+
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref MyEC2Instance
+
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId:
+         Ref: MyVPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 24.126.15.115/32
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
